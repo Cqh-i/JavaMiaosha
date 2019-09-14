@@ -92,6 +92,20 @@
 
 5. **安全性优化：双重md5密码校验，秒杀接口地址的隐藏，接口限流防刷，数学公式验证码。**
 
+## 解决超卖问题
+
+超卖场景：
+不同用户在读请求的时候，发现商品库存足够，然后同时发起请求，进行秒杀操作，减库存，导致库存减为负数。
+最简单的方法，更新数据库减库存的时候，进行库存限制条件，在reduceStock(GoodsVo goodsvo)这个方法里，sql要多加一个stock_count > 0即：
+
+```java
+//stock_count>0的时候才执行更新，数据库本身会有锁，那么就不会在数据库中同时多个线程更新一条记录，使用数据库特性来保证超卖的问题
+@Update("update miaosha_goods set stock_count=stock_count-1 where goods_id=#{goodsId} and stock_count>0")
+public void reduceStock(MiaoshaGoods goods);  
+```
+
+InnoDB默认是可重复读的（REPEATABLE READ）
+
 
 
 ## 运行说明
